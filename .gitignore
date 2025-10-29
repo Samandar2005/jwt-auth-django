@@ -1,0 +1,23 @@
+# 1. .gitignore
+echo ".venv
+__pycache__/
+*.pyc
+db.sqlite3
+.env
+.idea
+.vscode
+" > .gitignore
+
+# 2. Git init va commit
+git init
+git add .
+git commit -m "Initial commit: Django JWT auth scaffold"
+
+# 3. GitHub repository yaratish
+# variant A: GitHub veb orqali repo yarating, so'ng:
+git remote add origin git@github.com:USERNAME/jwt-auth-django.git   # yoki HTTPS
+git branch -M main
+git push -u origin main
+
+# variant B: GitHub CLI bor bo'lsa:
+# gh repo create USERNAME/jwt-auth-django --public --source=. --remote=origin --push
