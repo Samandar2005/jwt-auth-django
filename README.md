@@ -4,14 +4,17 @@ This project implements a secure authentication system using Django Rest Framewo
 
 ## Features
 
-- Custom User Model with extended fields
-- JWT Authentication
-- Email-based authentication
+- Custom User Model with extended fields (phone, avatar, bio)
+- JWT Authentication with email-based login
 - Registration and Login functionality
 - Token refresh mechanism
 - Secure logout with token blacklisting
 - Rate limiting for API endpoints
 - CORS configuration for frontend integration
+- Interactive API documentation (Swagger/ReDoc)
+- Production-ready security settings
+- Comprehensive test coverage
+- Environment-based configuration
 
 ## Technologies
 
@@ -20,6 +23,10 @@ This project implements a secure authentication system using Django Rest Framewo
 - Django Rest Framework
 - SimpleJWT
 - django-cors-headers
+- drf-yasg (Swagger/OpenAPI)
+- PostgreSQL (production)
+- Nginx + Gunicorn (deployment)
+- Redis (optional caching)
 
 ## Installation
 
@@ -43,10 +50,35 @@ pip install -r requirements.txt
 
 4. Create .env file in the root directory:
 ```env
+# Django settings
 DJANGO_SECRET_KEY=your-secret-key-here
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database settings (optional for production)
+# DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+
+# CORS settings
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
+# JWT settings
+ACCESS_TOKEN_LIFETIME_MINUTES=15
+REFRESH_TOKEN_LIFETIME_DAYS=7
+
+# Email settings (for password reset)
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-specific-password
+
+# Security settings
+SECURE_SSL_REDIRECT=False
+SESSION_COOKIE_SECURE=False
+CSRF_COOKIE_SECURE=False
+SECURE_BROWSER_XSS_FILTER=True
+SECURE_CONTENT_TYPE_NOSNIFF=True
 ```
 
 5. Run migrations:
@@ -64,7 +96,13 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-## API Endpoints
+## API Documentation
+
+The API documentation is available through Swagger UI and ReDoc interfaces:
+
+- Swagger UI: `/swagger/` - Interactive API documentation
+- ReDoc: `/redoc/` - Alternative API documentation
+- JSON format: `/swagger.json` - Raw API specification
 
 ### Authentication Endpoints
 
