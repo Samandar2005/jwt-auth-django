@@ -1,4 +1,5 @@
 # 1. .gitignore
+venv
 .venv/
 venv/
 __pycache__/
