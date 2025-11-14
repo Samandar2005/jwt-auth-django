@@ -5,6 +5,8 @@ This project implements a secure authentication system using Django Rest Framewo
 ## Features
 
 - Custom User Model with extended fields (phone, avatar, bio)
+- Custom User Manager for proper Django authentication functionality
+- Custom User Admin interface for managing users through Django admin
 - JWT Authentication with email-based login
 - Registration and Login functionality
 - Token refresh mechanism
@@ -95,6 +97,49 @@ python manage.py createsuperuser
 ```bash
 python manage.py runserver
 ```
+
+## User Management
+
+### CustomUserManager
+
+The project includes a custom user manager (`CustomUserManager`) that extends Django's `BaseUserManager`. This is essential for proper Django authentication functionality, especially when using email as the primary authentication field.
+
+**Why CustomUserManager is needed:**
+- Ensures `createsuperuser` command works correctly with email-based authentication
+- Properly handles user creation with email normalization
+- Validates required fields during user creation
+- Maintains security best practices for password handling
+
+**Features:**
+- `create_user()`: Creates regular users with email and username validation
+- `create_superuser()`: Creates superusers with proper permission flags
+- Email normalization for consistent storage
+- Password hashing handled automatically
+
+### CustomUserAdmin
+
+The project includes a custom admin interface (`CustomUserAdmin`) for managing users through Django's admin panel.
+
+**Features:**
+- Extended list display showing email, username, name, phone, and status
+- Advanced filtering by staff status, superuser status, active status, and date joined
+- Search functionality across email, username, first name, last name, and phone
+- Organized fieldsets for better user management:
+  - Authentication fields (email, username, password)
+  - Personal information (name, phone, bio, avatar, birth date)
+  - Permissions and groups
+  - Important dates (last login, date joined)
+- Read-only fields for security (last login, date joined)
+- Custom add form for creating new users
+
+**Accessing the Admin Panel:**
+1. Create a superuser (if not already created):
+   ```bash
+   python manage.py createsuperuser
+   ```
+2. Navigate to `/admin/` in your browser
+3. Login with your superuser credentials
+4. Access the "Users" section to manage all user accounts
 
 ## API Documentation
 
