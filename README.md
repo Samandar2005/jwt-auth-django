@@ -4,9 +4,9 @@ This project implements a secure authentication system using Django Rest Framewo
 
 ## Features
 
-- Custom User Model with extended fields (phone, avatar, bio)
-- Custom User Manager for proper Django authentication functionality
-- Custom User Admin interface for managing users through Django admin
+- Custom User Model with extended fields (phone, avatar, bio, birth_date)
+- CustomUserManager for proper user creation and superuser management
+- CustomUserAdmin for enhanced Django admin interface
 - JWT Authentication with email-based login
 - Registration and Login functionality
 - Token refresh mechanism
@@ -29,6 +29,35 @@ This project implements a secure authentication system using Django Rest Framewo
 - PostgreSQL (production)
 - Nginx + Gunicorn (deployment)
 - Redis (optional caching)
+
+## User Model Architecture
+
+### CustomUserManager
+
+The project includes a custom user manager (`CustomUserManager`) that extends Django's `BaseUserManager`. This is essential for proper functionality when using email as the primary authentication field:
+
+- **Why it's needed**: When `USERNAME_FIELD` is set to `email`, Django's default user manager doesn't properly handle `createsuperuser` and other authentication functions. The custom manager ensures:
+  - Proper user creation with email normalization
+  - Correct superuser creation with all required permissions
+  - Validation of required fields (email and username)
+
+- **Methods**:
+  - `create_user()`: Creates a regular user with email and password
+  - `create_superuser()`: Creates a superuser with staff and superuser permissions
+
+### CustomUserAdmin
+
+The Django admin interface is configured with `CustomUserAdmin` which extends Django's default `UserAdmin`:
+
+- **Features**:
+  - Email-based user management
+  - Display of custom fields (phone, bio, avatar, birth_date)
+  - Enhanced search functionality (email, username, first_name, last_name)
+  - Filtering by staff status, active status, and date joined
+  - Proper field organization in admin forms
+  - Read-only fields for important dates (date_joined, last_login)
+
+- **Access**: Navigate to `/admin/` after creating a superuser to manage users through the admin interface.
 
 ## Installation
 
@@ -97,49 +126,6 @@ python manage.py createsuperuser
 ```bash
 python manage.py runserver
 ```
-
-## User Management
-
-### CustomUserManager
-
-The project includes a custom user manager (`CustomUserManager`) that extends Django's `BaseUserManager`. This is essential for proper Django authentication functionality, especially when using email as the primary authentication field.
-
-**Why CustomUserManager is needed:**
-- Ensures `createsuperuser` command works correctly with email-based authentication
-- Properly handles user creation with email normalization
-- Validates required fields during user creation
-- Maintains security best practices for password handling
-
-**Features:**
-- `create_user()`: Creates regular users with email and username validation
-- `create_superuser()`: Creates superusers with proper permission flags
-- Email normalization for consistent storage
-- Password hashing handled automatically
-
-### CustomUserAdmin
-
-The project includes a custom admin interface (`CustomUserAdmin`) for managing users through Django's admin panel.
-
-**Features:**
-- Extended list display showing email, username, name, phone, and status
-- Advanced filtering by staff status, superuser status, active status, and date joined
-- Search functionality across email, username, first name, last name, and phone
-- Organized fieldsets for better user management:
-  - Authentication fields (email, username, password)
-  - Personal information (name, phone, bio, avatar, birth date)
-  - Permissions and groups
-  - Important dates (last login, date joined)
-- Read-only fields for security (last login, date joined)
-- Custom add form for creating new users
-
-**Accessing the Admin Panel:**
-1. Create a superuser (if not already created):
-   ```bash
-   python manage.py createsuperuser
-   ```
-2. Navigate to `/admin/` in your browser
-3. Login with your superuser credentials
-4. Access the "Users" section to manage all user accounts
 
 ## API Documentation
 
