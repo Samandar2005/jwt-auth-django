@@ -10,6 +10,7 @@ This project implements a secure authentication system using Django Rest Framewo
 - JWT Authentication with email-based login
 - Registration and Login functionality
 - User Profile management (GET, PUT, PATCH endpoints)
+- Password change functionality with old password verification
 - Token refresh mechanism
 - Secure logout with token blacklisting
 - Rate limiting for API endpoints
@@ -219,6 +220,41 @@ All profile endpoints require authentication (JWT token in Authorization header)
   {
     "first_name": "Updated Name",
     "bio": "New bio text"
+  }
+  ```
+
+### Password Change Endpoint
+
+- `POST /api/auth/change-password/` - Change user password
+  - **Headers**: `Authorization: Bearer <access_token>`
+  - **Request**:
+  ```json
+  {
+    "old_password": "current_password",
+    "new_password": "new_secure_password",
+    "new_password2": "new_secure_password"
+  }
+  ```
+  - **Response** (Success):
+  ```json
+  {
+    "message": "Password changed successfully."
+  }
+  ```
+  - **Validation**:
+    - Old password must be correct
+    - New password must meet Django's password validation requirements
+    - New password fields must match
+  - **Error Response** (Old password incorrect):
+  ```json
+  {
+    "old_password": ["Old password is incorrect."]
+  }
+  ```
+  - **Error Response** (Passwords don't match):
+  ```json
+  {
+    "new_password": ["New password fields didn't match."]
   }
   ```
 
@@ -486,6 +522,7 @@ Simple JWT authentication example with Django REST Framework.
 - GET /api/auth/profile/me/ -> alias for profile/ (requires Authorization header)
 - PUT /api/auth/profile/   -> full update user profile (requires Authorization header)
 - PATCH /api/auth/profile/ -> partial update user profile (requires Authorization header)
+- POST /api/auth/change-password/ -> change user password (requires Authorization header)
 
 ## Setup
 
