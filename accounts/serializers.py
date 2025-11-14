@@ -2,6 +2,27 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser
 
+
+class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user profile display and update.
+    Excludes sensitive fields like password.
+    """
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 
+                  'phone', 'bio', 'avatar', 'birth_date', 'date_joined', 'last_login')
+        read_only_fields = ('id', 'email', 'date_joined', 'last_login')
+        extra_kwargs = {
+            'phone': {'required': False},
+            'bio': {'required': False},
+            'avatar': {'required': False},
+            'birth_date': {'required': False},
+            'first_name': {'required': False},
+            'last_name': {'required': False},
+        }
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)

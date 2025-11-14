@@ -9,6 +9,7 @@ This project implements a secure authentication system using Django Rest Framewo
 - CustomUserAdmin for enhanced Django admin interface
 - JWT Authentication with email-based login
 - Registration and Login functionality
+- User Profile management (GET, PUT, PATCH endpoints)
 - Token refresh mechanism
 - Secure logout with token blacklisting
 - Rate limiting for API endpoints
@@ -168,6 +169,56 @@ The API documentation is available through Swagger UI and ReDoc interfaces:
   ```json
   {
     "refresh": "your-refresh-token"
+  }
+  ```
+
+### User Profile Endpoints
+
+All profile endpoints require authentication (JWT token in Authorization header).
+
+- `GET /api/auth/profile/` - Get current user profile information
+  - **Headers**: `Authorization: Bearer <access_token>`
+  - **Response**:
+  ```json
+  {
+    "id": 1,
+    "username": "testuser",
+    "email": "test@example.com",
+    "first_name": "Test",
+    "last_name": "User",
+    "phone": "+1234567890",
+    "bio": "User bio text",
+    "avatar": "/media/avatars/avatar.jpg",
+    "birth_date": "1990-01-01",
+    "date_joined": "2024-01-01T00:00:00Z",
+    "last_login": "2024-01-15T10:30:00Z"
+  }
+  ```
+
+- `GET /api/auth/profile/me/` - Alias for `/api/auth/profile/` (same functionality)
+
+- `PUT /api/auth/profile/` - Full update of user profile
+  - **Headers**: `Authorization: Bearer <access_token>`
+  - **Request**:
+  ```json
+  {
+    "username": "newusername",
+    "first_name": "New",
+    "last_name": "Name",
+    "phone": "+9876543210",
+    "bio": "Updated bio",
+    "birth_date": "1995-05-15"
+  }
+  ```
+  - **Note**: Email, id, date_joined, and last_login are read-only fields
+
+- `PATCH /api/auth/profile/` - Partial update of user profile
+  - **Headers**: `Authorization: Bearer <access_token>`
+  - **Request** (only include fields you want to update):
+  ```json
+  {
+    "first_name": "Updated Name",
+    "bio": "New bio text"
   }
   ```
 
@@ -431,6 +482,10 @@ Simple JWT authentication example with Django REST Framework.
 - POST /api/auth/token/     -> obtain access & refresh
 - POST /api/auth/token/refresh/ -> refresh access
 - POST /api/auth/logout/    -> blacklist refresh (requires Authorization header)
+- GET /api/auth/profile/   -> get current user profile (requires Authorization header)
+- GET /api/auth/profile/me/ -> alias for profile/ (requires Authorization header)
+- PUT /api/auth/profile/   -> full update user profile (requires Authorization header)
+- PATCH /api/auth/profile/ -> partial update user profile (requires Authorization header)
 
 ## Setup
 

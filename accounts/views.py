@@ -1,11 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .serializers import RegisterSerializer
+from .serializers import RegisterSerializer, UserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import generics
 
 # 1) Register endpoint
@@ -44,7 +44,6 @@ class MyTokenObtainPairView(TokenObtainPairView):
     permission_classes = [AllowAny]
 
 # 3) Logout (blacklist refresh token)
-from rest_framework.permissions import IsAuthenticated
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -56,3 +55,40 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+# 4) User Profile endpoints
+class ProfileView(APIView):
+    """
+    Get, update user profile.
+    GET: Retrieve current user profile
+    PUT: Full update of user profile
+    PATCH: Partial update of user profile
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """
+        Get current user profile information.
+        """
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        """
+        Full update of user profile.
+        """
+        serializer = UserSerializer(request.user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        """
+        Partial update of user profile.
+        """
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
