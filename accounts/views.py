@@ -1,12 +1,22 @@
+import json
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .serializers import RegisterSerializer, UserSerializer, PasswordChangeSerializer
+from .serializers import (
+    RegisterSerializer, UserSerializer, PasswordChangeSerializer,
+    PasswordResetSerializer, PasswordResetConfirmSerializer
+)
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import generics
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+from django.core.mail import send_mail
+from django.conf import settings
+from .models import CustomUser
 
 # 1) Register endpoint
 class RegisterView(generics.CreateAPIView):
@@ -114,3 +124,126 @@ class ChangePasswordView(APIView):
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# 6) Password Reset endpoints
+class PasswordResetView(APIView):
+    """
+    Send password reset link to user's email.
+    """
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        """
+        Send password reset email.
+        Requires: email
+        """
+        # Handle both JSON and form data
+        # DRF's request.data should work, but handle edge cases
+        data = request.data
+        if not data or (isinstance(data, dict) and not data):
+            # Try to get from body if request.data is empty
+            if hasattr(request, 'body') and request.body:
+                try:
+                    data = json.loads(request.body)
+                except (json.JSONDecodeError, ValueError):
+                    data = {}
+        
+        serializer = PasswordResetSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(
+                {"error": "Invalid request", "details": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        email = serializer.validated_data['email']
+        try:
+            user = CustomUser.objects.get(email=email)
+            # Generate token
+            token_generator = PasswordResetTokenGenerator()
+            token = token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Create reset link
+            # In production, replace with your frontend URL
+            reset_link = f"{request.scheme}://{request.get_host()}/api/auth/password-reset-confirm/?uid={uid}&token={token}"
+            
+            # Send email
+            subject = 'Password Reset Request'
+            message = f'''
+Hello {user.username or user.email},
+
+You requested a password reset for your account.
+
+Please click the following link to reset your password:
+{reset_link}
+
+If you did not request this, please ignore this email.
+
+This link will expire in 24 hours.
+
+Best regards,
+JWT Auth Team
+'''
+            from_email = settings.EMAIL_HOST_USER if hasattr(settings, 'EMAIL_HOST_USER') else 'noreply@example.com'
+            
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    from_email,
+                    [email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                # Log error but don't reveal to user
+                return Response(
+                    {"message": "Failed to send email. Please try again later."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Always return success message for security (don't reveal if email exists)
+            return Response(
+                {"message": "If an account with this email exists, a password reset link has been sent."},
+                status=status.HTTP_200_OK
+            )
+        except CustomUser.DoesNotExist:
+            # Don't reveal if email exists or not for security
+            return Response(
+                {"message": "If an account with this email exists, a password reset link has been sent."},
+                status=status.HTTP_200_OK
+            )
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    Confirm password reset with token and set new password.
+    """
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        """
+        Reset password with token.
+        Requires: uid, token, new_password, new_password2
+        """
+        # Handle both JSON and form data
+        # DRF's request.data should work, but handle edge cases
+        data = request.data
+        if not data or (isinstance(data, dict) and not data):
+            # Try to get from body if request.data is empty
+            if hasattr(request, 'body') and request.body:
+                try:
+                    data = json.loads(request.body)
+                except (json.JSONDecodeError, ValueError):
+                    data = {}
+        
+        serializer = PasswordResetConfirmSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Password has been reset successfully."},
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            {"error": "Invalid request", "details": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )

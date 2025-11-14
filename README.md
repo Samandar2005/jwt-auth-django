@@ -11,6 +11,7 @@ This project implements a secure authentication system using Django Rest Framewo
 - Registration and Login functionality
 - User Profile management (GET, PUT, PATCH endpoints)
 - Password change functionality with old password verification
+- Password reset via email with secure token system
 - Token refresh mechanism
 - Secure logout with token blacklisting
 - Rate limiting for API endpoints
@@ -257,6 +258,58 @@ All profile endpoints require authentication (JWT token in Authorization header)
     "new_password": ["New password fields didn't match."]
   }
   ```
+
+### Password Reset Endpoints
+
+Password reset endpoints allow users to reset their password via email when they forget it.
+
+- `POST /api/auth/password-reset/` - Request password reset (send reset link to email)
+  - **Request**:
+  ```json
+  {
+    "email": "user@example.com"
+  }
+  ```
+  - **Response** (Success - always returns same message for security):
+  ```json
+  {
+    "message": "If an account with this email exists, a password reset link has been sent."
+  }
+  ```
+  - **Note**: For security reasons, the response is the same whether the email exists or not.
+  - **Email**: A password reset link will be sent to the email address if it exists in the system.
+  - **Token Expiry**: The reset token expires after 24 hours.
+
+- `POST /api/auth/password-reset-confirm/` - Confirm password reset with token
+  - **Request**:
+  ```json
+  {
+    "uid": "base64_encoded_user_id",
+    "token": "password_reset_token",
+    "new_password": "new_secure_password",
+    "new_password2": "new_secure_password"
+  }
+  ```
+  - **Response** (Success):
+  ```json
+  {
+    "message": "Password has been reset successfully."
+  }
+  ```
+  - **Error Response** (Invalid token):
+  ```json
+  {
+    "token": ["Invalid or expired token."]
+  }
+  ```
+  - **Error Response** (Passwords don't match):
+  ```json
+  {
+    "new_password": ["New password fields didn't match."]
+  }
+  ```
+  - **How to get uid and token**: These are provided in the password reset email link as query parameters.
+  - **Example reset link**: `http://your-domain.com/api/auth/password-reset-confirm/?uid=MTIz&token=abc123def456`
 
 ### Response Format
 
@@ -523,6 +576,8 @@ Simple JWT authentication example with Django REST Framework.
 - PUT /api/auth/profile/   -> full update user profile (requires Authorization header)
 - PATCH /api/auth/profile/ -> partial update user profile (requires Authorization header)
 - POST /api/auth/change-password/ -> change user password (requires Authorization header)
+- POST /api/auth/password-reset/ -> request password reset (send reset link to email)
+- POST /api/auth/password-reset-confirm/ -> confirm password reset with token
 
 ## Setup
 
